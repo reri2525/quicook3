@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  db:
+    image: mysql:8.0  
+    command:
+      - "--default-authentication-plugin=mysql_native_password"
+    ports:
+      - "3306:3306"
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    platform: linux/x86_64
+    security_opt:
+      - seccomp:unconfined
+  go:
+    build: 
+      context: ./go/
+      dockerfile: Dockerfile
+    volumes: 
+      - ./go:/go
+    tty: true 
+    env_file: 
+      - ./go/.env
+    environment:
+      - TZ=Asia/Tokyo
+  next:
+    build:
+      context: ./next/
+      dockerfile: Dockerfile
+    volumes:
+      - ./next:/next
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:3001
+      REACT_APP_ENV: development
+    command: sh -c "cd app && npm run dev"
+volumes:
+  db:
+    driver: local
+  
